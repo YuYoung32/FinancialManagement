@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.sql.*;
 
 public class SqlFunction {
@@ -30,9 +31,6 @@ private static final String DBPASSWORD = "12334";
             conn = DriverManager.getConnection(DBURL);//获得连接，public权限
             System.out.println("Succeed to connect database.");
             stmt = conn.createStatement();
-            //这样写是可以运行的
-            SqlFunction test = new SqlFunction();
-            System.out.println(test.login("hdu", "321"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -58,8 +56,36 @@ private static final String DBPASSWORD = "12334";
         //执行预编译查询语句
         rs = pstmt.executeQuery();
         return rs.next();
+    }
+    /*获得结果集用这种
+    //创建sql语句，使用?作为占位符
+    String sql = "{call proc_sumUpMoney()}";
+    //创建预编译查询语句对象
+    CallableStatement proc = conn.prepareCall(sql);
+    rs = proc.executeQuery();
+    return proc.getInt(1);
 
+     */
+    public int returnMoney() throws SQLException {
+        //创建sql语句，使用?作为占位符
+        String sql = "{? = call proc_sumUpMoney()}";
+        //创建预编译查询语句对象
+        CallableStatement proc = conn.prepareCall(sql);
+        proc.registerOutParameter(1,Types.INTEGER);
+        proc.execute();
+        return proc.getInt(1);
     }
 
-
+    /**
+     * 修改密码
+     * @param username
+     * @param newPwd
+     */
+    public void changePwd(String username, String newPwd) throws SQLException{
+        String sql = "update loginInfo set upw = ? where uid = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1,newPwd);
+        pstmt.setString(2,username);
+        pstmt.execute();
+    }
 }
