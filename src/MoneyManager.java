@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -85,6 +87,7 @@ class MainFrame extends JFrame implements ActionListener {
     private int bal1, bal2;
     private JTable table;
     private String username;
+    private DefaultTableModel model;
     //endregion
 
     public MainFrame(String username) throws SQLException {    //构造方法
@@ -151,7 +154,12 @@ class MainFrame extends JFrame implements ActionListener {
         //创建表格
         String[] cloum = {"编号", "日期", "类型", "内容", "金额",};
         Object[][] row = new Object[50][5];
-        table = new JTable(row, cloum);
+        model = new DefaultTableModel(row, cloum) {
+            public boolean isCellEditable(int rowIndex, int ColIndex) {                 //表格内容不可编辑
+                return false;
+            }
+        };
+        table = new JTable(model);
         //创建一个可以滑动的区域
         JScrollPane scrollpane = new JScrollPane(table);                                //创建一个可以滑动的区域
         scrollpane.setPreferredSize(new Dimension(580, 350));                //设置大小，超出大小即隐藏
@@ -162,6 +170,8 @@ class MainFrame extends JFrame implements ActionListener {
         p_detail.add(scrollpane);                                                        //向容器内添加滑动区域
         add(p_detail, "South");                                                //向顶级容器内添加这个容器
         //endregion
+        model.setRowCount(0);
+        new SqlFunction().showData(model);
         bal1 =  new SqlFunction().returnMoney();
         if (bal1 < 0)
             l_bal.setText("个人总收支余额为" + bal1 + "元。您已超支，请适度消费！");
@@ -177,18 +187,45 @@ class MainFrame extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         Object temp = e.getSource();
-        if (temp == mI[0]) {                        //菜单项-密码重置
-            new ModifyPwdFrame(username);           //修改密码界面
-        } else if (temp == mI[1]) {                 //菜单项-退出系统
-            System.out.println("已退出");
-            System.exit(0);
-        } else if (temp == m_FMEdit) {
-            new BalEditFrame();                     //收支编辑界面
-        } else if (temp == b_select1) {            //根据收支类型查询
-            //添加代码
-        } else if (temp == b_select2) {   //根据时间范围查询
-            //添加代码
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        try{
+            if (temp == mI[0]) {                        //菜单项-密码重置
+                new ModifyPwdFrame(username);           //修改密码界面
+            } else if (temp == mI[1]) {                 //菜单项-退出系统
+                System.out.println("已退出");
+                System.exit(0);
+            } else if (temp == m_FMEdit) {
+                new BalEditFrame();                     //收支编辑界面
+            } else if (temp == b_select1) {            //todo:该做这个了，根据收支类型查询
+                String type = String.valueOf(c_type.getSelectedItem());
+                String startDate = t_fromdate.getText();
+                String endDate = t_todate.getText();
+                try{
+                     format.parse(startDate);
+                }catch (ParseException p){
+                    JOptionPane.showMessageDialog(null,                                    //弹出格式错误警告
+                            "日期格式应为：YYYYMMDD", "警告", JOptionPane.ERROR_MESSAGE);
+                }
+
+                model.setRowCount(0);
+                new SqlFunction().selShowData(model, startDate, endDate, type);
+            } else if (temp == b_select2) {            //根据时间范围查询
+                String type = (String) c_type.getSelectedItem();
+                String startDate = t_fromdate.getText();
+                String endDate = t_todate.getText();
+                try{
+                    format.parse(startDate);
+                }catch (ParseException p){
+                    JOptionPane.showMessageDialog(null,                                    //弹出格式错误警告
+                            "日期格式应为：YYYYMMDD", "警告", JOptionPane.ERROR_MESSAGE);
+                }
+                model.setRowCount(0);
+                new SqlFunction().selShowData(model, startDate, endDate, type);
+            }
+        }catch (SQLException s){
+            s.printStackTrace();
         }
+
     }
 }
 
@@ -272,7 +309,7 @@ class ModifyPwdFrame extends JFrame implements ActionListener {
     }
 }
 
-//todo:该做这个页面了！
+
 //收支编辑界面
 class BalEditFrame extends JFrame implements ActionListener {
     private JTextField t_id, t_date, t_bal;

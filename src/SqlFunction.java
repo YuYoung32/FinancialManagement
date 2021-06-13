@@ -61,6 +61,7 @@ private static final String DBPASSWORD = "12334";
 
     /**
      * 把所有收支加起来
+     *
      * @return
      * @throws SQLException
      */
@@ -95,7 +96,7 @@ private static final String DBPASSWORD = "12334";
      * @throws SQLException
      */
     public void showData(DefaultTableModel model) throws SQLException {
-        String sql = "select * from IncomeAndSpending";
+        String sql = "select * from IncomeAndSpending order by rdate desc, id asc";
         PreparedStatement pstmt = conn.prepareStatement(sql);
         ResultSet rs = pstmt.executeQuery();
         while (rs.next()) {
@@ -110,6 +111,7 @@ private static final String DBPASSWORD = "12334";
 
     /**
      * 更新表中数据
+     *
      * @param id
      * @param rdate
      * @param rtype
@@ -133,10 +135,11 @@ private static final String DBPASSWORD = "12334";
 
     /**
      * 删除表中数据
+     *
      * @param id
      * @throws SQLException
      */
-    public void deleteData(String id) throws SQLException{
+    public void deleteData(String id) throws SQLException {
         String sql = "delete from IncomeAndSpending where id=?";
         PreparedStatement pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, id);
@@ -145,6 +148,7 @@ private static final String DBPASSWORD = "12334";
 
     /**
      * 插入数据
+     *
      * @param id
      * @param rdate
      * @param rtype
@@ -164,11 +168,55 @@ private static final String DBPASSWORD = "12334";
         pstmt.executeUpdate();
     }
 
-    public boolean judgeRepeat(String id) throws SQLException{
+    /**
+     * 判断数据库中是否有和传入id重复的id
+     * @param id
+     * @return
+     * @throws SQLException
+     */
+    public boolean judgeRepeat(String id) throws SQLException {
         String sql = "select * from IncomeAndSpending where id = ?";
         PreparedStatement pstmt = conn.prepareStatement(sql);
         pstmt.setString(1, id);
         rs = pstmt.executeQuery();
         return rs.next();
+    }
+
+    /**
+     * 按照开始日期和结束日期和收支类型选择性显示表
+     * @param model
+     * @param startDate
+     * @param endDate
+     * @param selType
+     * @throws SQLException
+     */
+    public void selShowData(DefaultTableModel model, String startDate, String endDate, String selType) throws SQLException {
+        String sql = "select * from IncomeAndSpending order by rdate desc, id asc";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery();
+        while (rs.next()) {
+            String id = rs.getString("id");
+            String rdate = rs.getString("rdate");
+            String rtype = rs.getString("rtype");
+            String ritem = rs.getString("ritem");
+            int bal = rs.getInt("bal");                              //todo:性能优化
+            if (rtype.equals(selType)) {                                            //确认收支类型
+                if (startDate.length() != 0 && endDate.length() == 0) {             //指定日期以后
+                    if (rdate.compareTo(startDate) >= 0) {
+                        model.addRow(new Object[]{id, rdate, rtype, ritem, bal});
+                    }
+                } else if (startDate.length() == 0 && endDate.length() != 0) {          //指定日期之前
+                    if (rdate.compareTo(endDate) <= 0) {
+                        model.addRow(new Object[]{id, rdate, rtype, ritem, bal});
+                    }
+                } else if (startDate.length() != 0 && endDate.length() != 0) {          //两日期之间
+                    if (rdate.compareTo(startDate) >= 0 && rdate.compareTo(endDate) <= 0) {
+                        model.addRow(new Object[]{id, rdate, rtype, ritem, bal});
+                    }
+                } else {                                                                 //没有指定日期
+                    model.addRow(new Object[]{id, rdate, rtype, ritem, bal});
+                }
+            }
+        }
     }
 }
