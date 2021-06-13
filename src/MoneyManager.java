@@ -1,7 +1,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.util.Arrays;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
 public class MoneyManager {
     public static void main(String[] args) {
@@ -80,7 +82,7 @@ class MainFrame extends JFrame implements ActionListener {
     private JComboBox c_type;
     private JPanel p_condition, p_detail;
     private String s1[] = {"收入", "支出"};
-    private double bal1, bal2;
+    private int bal1, bal2;
     private JTable table;
     private String username;
     //endregion
@@ -160,7 +162,7 @@ class MainFrame extends JFrame implements ActionListener {
         p_detail.add(scrollpane);                                                        //向容器内添加滑动区域
         add(p_detail, "South");                                                //向顶级容器内添加这个容器
         //endregion
-        bal1 = (double) new SqlFunction().returnMoney();
+        bal1 =  new SqlFunction().returnMoney();
         if (bal1 < 0)
             l_bal.setText("个人总收支余额为" + bal1 + "元。您已超支，请适度消费！");
         else
@@ -176,12 +178,12 @@ class MainFrame extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object temp = e.getSource();
         if (temp == mI[0]) {                        //菜单项-密码重置
-            new ModifyPwdFrame(username);
+            new ModifyPwdFrame(username);           //修改密码界面
         } else if (temp == mI[1]) {                 //菜单项-退出系统
             System.out.println("已退出");
             System.exit(0);
         } else if (temp == m_FMEdit) {
-            new BalEditFrame();                     //todo:该做这个了！
+            new BalEditFrame();                     //收支编辑界面
         } else if (temp == b_select1) {            //根据收支类型查询
             //添加代码
         } else if (temp == b_select2) {   //根据时间范围查询
@@ -273,55 +275,50 @@ class ModifyPwdFrame extends JFrame implements ActionListener {
 //todo:该做这个页面了！
 //收支编辑界面
 class BalEditFrame extends JFrame implements ActionListener {
-    private JLabel l_id, l_date, l_bal, l_type, l_item;
     private JTextField t_id, t_date, t_bal;
     private JComboBox c_type, c_item;
     private JButton b_update, b_delete, b_select, b_new, b_clear;
     private JPanel p1, p2, p3;
     private JScrollPane scrollpane;
+    private DefaultTableModel model;
     private JTable table;
+    private int selColIndex;
 
     public BalEditFrame() {
         super("收支编辑");
-        l_id = new JLabel("编号：");
-        l_date = new JLabel("日期：");
-        l_bal = new JLabel("金额：");
-        l_type = new JLabel("类型：");
-        l_item = new JLabel("内容：");
         t_id = new JTextField(8);
         t_date = new JTextField(8);
         t_bal = new JTextField(8);
 
-        String s1[] = {"收入", "支出"};
-        String s2[] = {"购物", "餐饮", "居家", "交通", "娱乐", "人情", "工资", "奖金", "其他"};
-        c_type = new JComboBox(s1);
+        String[] s1 = {"收入", "支出"};
+        String[] s2 = {"购物", "餐饮", "居家", "交通", "娱乐", "人情", "工资", "奖金", "其他"};
+        c_type = new JComboBox(s1);                                                                 //下拉框
         c_item = new JComboBox(s2);
 
-        b_select = new JButton("查询");
+        b_new = new JButton("录入");
         b_update = new JButton("修改");
         b_delete = new JButton("删除");
-        b_new = new JButton("录入");
+        b_select = new JButton("查询");
         b_clear = new JButton("清空");
 
-        Container c = this.getContentPane();
-        c.setLayout(new BorderLayout());
+        setLayout(new BorderLayout());
 
         p1 = new JPanel();
         p1.setLayout(new GridLayout(5, 2, 10, 10));
         p1.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("编辑收支信息"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        p1.add(l_id);
+        p1.add(new JLabel("编号："));
         p1.add(t_id);
-        p1.add(l_date);
+        p1.add(new JLabel("日期："));
         p1.add(t_date);
-        p1.add(l_type);
+        p1.add(new JLabel("类型："));
         p1.add(c_type);
-        p1.add(l_item);
+        p1.add(new JLabel("内容："));
         p1.add(c_item);
-        p1.add(l_bal);
+        p1.add(new JLabel("金额："));
         p1.add(t_bal);
-        c.add(p1, BorderLayout.WEST);
+        add(p1, BorderLayout.WEST);
 
         p2 = new JPanel();
         p2.setLayout(new GridLayout(5, 1, 10, 10));
@@ -330,49 +327,126 @@ class BalEditFrame extends JFrame implements ActionListener {
         p2.add(b_delete);
         p2.add(b_select);
         p2.add(b_clear);
-
-        c.add(p2, BorderLayout.CENTER);
+        add(p2, BorderLayout.CENTER);
 
         p3 = new JPanel();
         p3.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("显示收支信息"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
 
-        String[] cloum = {"编号", "日期", "类型", "内容", "金额"};
+        String[] column = {"编号", "日期", "类型", "内容", "金额"};
         Object[][] row = new Object[50][5];
-        table = new JTable(row, cloum);
+        model = new DefaultTableModel(row, column) {
+            public boolean isCellEditable(int rowIndex, int ColIndex) {     //表格内容不可编辑
+                return false;
+            }
+        };
+        model.setRowCount(0);
+        table = new JTable(model);
         scrollpane = new JScrollPane(table);
         scrollpane.setViewportView(table);
         scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         p3.add(scrollpane);
-        c.add(p3, BorderLayout.EAST);
+        add(p3, BorderLayout.EAST);
 
-        b_update.addActionListener(this);
-        b_delete.addActionListener(this);
-        b_select.addActionListener(this);
-        b_new.addActionListener(this);
-        b_clear.addActionListener(this);
+        b_new.addActionListener(this);          //录入
+        b_update.addActionListener(this);       //修改
+        b_delete.addActionListener(this);       //删除
+        b_select.addActionListener(this);       //查询
+        b_clear.addActionListener(this);        //清空
+        table.addMouseListener(new MouseListener() {//为table添加鼠标点击事件监听addMouseListener
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) {                                               //fixme:用户只能点击一次切换一次
+                    int selectRows = table.getSelectedRows().length;                        //取得用户所选行的行数
+                    if (selectRows == 1) {                                                  //一次只能选择一行
+                        t_id.setText("");
+                        t_date.setText("");
+                        t_bal.setText("");
+                        c_type.setSelectedIndex(0);
+                        c_item.setSelectedIndex(0);
 
-        //添加代码，为table添加鼠标点击事件监听addMouseListener
+                        selColIndex = table.getSelectedRow();                               //取得用户所选行号
+                        t_id.setText((String) table.getValueAt(selectRows, 0));     //把所选内容填入信息框
+                        t_date.setText((String) table.getValueAt(selectRows, 1));
+                        c_type.setSelectedItem(table.getValueAt(selectRows, 2));
+                        c_item.setSelectedItem(table.getValueAt(selectRows, 3));
+                        t_bal.setText(String.valueOf(table.getValueAt(selectRows, 4)));
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
 
         this.setResizable(false);
         this.setSize(800, 300);
         Dimension screen = this.getToolkit().getScreenSize();
         this.setLocation((screen.width - this.getSize().width) / 2, (screen.height - this.getSize().height) / 2);
-        this.show();
+        this.setVisible(true);
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (b_select == e.getSource()) {  //查询所有收支信息
-            //添加代码
-        } else if (b_update == e.getSource()) {  // 修改某条收支信息
-            //添加代码
-        } else if (b_delete == e.getSource()) {   //删除某条收支信息
-            //添加代码
-        } else if (b_new == e.getSource()) {   //新增某条收支信息
-            //添加代码
-        } else if (b_clear == e.getSource()) {   //清空输入框
-            //添加代码
+        try {
+            if (b_select == e.getSource()) {            //查询所有收支信息
+                model.setRowCount(0);                   //清空表格
+                new SqlFunction().showData(model);
+                table.setModel(model);
+            } else if (b_update == e.getSource()) {     //修改某条收支信息
+                String id = t_id.getText();
+                String rdata = t_date.getText();
+                String rtype = (String) c_type.getSelectedItem();
+                String ritem = (String) c_item.getSelectedItem();
+                int bal = Integer.parseInt(t_bal.getText());
+                String selid = (String) table.getValueAt(selColIndex, 0);
+                new SqlFunction().updateData(id, rdata, rtype, ritem, bal, selid);
+            } else if (b_delete == e.getSource()) {     //删除某条收支信息
+                String selid = (String) table.getValueAt(selColIndex, 0);
+                new SqlFunction().deleteData(selid);
+            } else if (b_new == e.getSource()) {        //新增某条收支信息
+                String id = t_id.getText();
+                String rdata = t_date.getText();
+                String rtype = (String) c_type.getSelectedItem();
+                String ritem = (String) c_item.getSelectedItem();
+                int bal = Integer.parseInt(t_bal.getText());
+                if (new SqlFunction().judgeRepeat(id)) {  //ID不能重复！
+                    JOptionPane.showMessageDialog(null,
+                            "ID已存在，请修改ID", "警告", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    new SqlFunction().insertData(id, rdata, rtype, ritem, bal);
+                }
+
+            } else if (b_clear == e.getSource()) {      //清空输入框
+                t_id.setText("");
+                t_date.setText("");
+                t_bal.setText("");
+                c_type.setSelectedIndex(0);
+                c_item.setSelectedIndex(0);
+            }
+            model.setRowCount(0);                       //每次操作都需要重新显示
+            new SqlFunction().showData(model);
+            table.setModel(model);
+        } catch (SQLException s) {
+            s.printStackTrace();
         }
+
     }
 }

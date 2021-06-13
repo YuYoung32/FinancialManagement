@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 
 public class SqlFunction {
@@ -57,35 +58,117 @@ private static final String DBPASSWORD = "12334";
         rs = pstmt.executeQuery();
         return rs.next();
     }
-    /*获得结果集用这种
-    //创建sql语句，使用?作为占位符
-    String sql = "{call proc_sumUpMoney()}";
-    //创建预编译查询语句对象
-    CallableStatement proc = conn.prepareCall(sql);
-    rs = proc.executeQuery();
-    return proc.getInt(1);
 
+    /**
+     * 把所有收支加起来
+     * @return
+     * @throws SQLException
      */
     public int returnMoney() throws SQLException {
         //创建sql语句，使用?作为占位符
         String sql = "{? = call proc_sumUpMoney()}";
         //创建预编译查询语句对象
         CallableStatement proc = conn.prepareCall(sql);
-        proc.registerOutParameter(1,Types.INTEGER);
+        proc.registerOutParameter(1, Types.INTEGER);
         proc.execute();
         return proc.getInt(1);
     }
 
     /**
      * 修改密码
+     *
      * @param username
      * @param newPwd
      */
-    public void changePwd(String username, String newPwd) throws SQLException{
+    public void changePwd(String username, String newPwd) throws SQLException {
         String sql = "update loginInfo set upw = ? where uid = ?";
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setString(1,newPwd);
-        pstmt.setString(2,username);
+        pstmt.setString(1, newPwd);
+        pstmt.setString(2, username);
         pstmt.execute();
+    }
+
+    /**
+     * 把收支表内数据呈现出来
+     *
+     * @param model
+     * @throws SQLException
+     */
+    public void showData(DefaultTableModel model) throws SQLException {
+        String sql = "select * from IncomeAndSpending";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        ResultSet rs = pstmt.executeQuery();
+        while (rs.next()) {
+            String id = rs.getString("id");
+            String rdate = rs.getString("rdate");
+            String rtype = rs.getString("rtype");
+            String ritem = rs.getString("ritem");
+            int bal = rs.getInt("bal");
+            model.addRow(new Object[]{id, rdate, rtype, ritem, bal});
+        }
+    }
+
+    /**
+     * 更新表中数据
+     * @param id
+     * @param rdate
+     * @param rtype
+     * @param ritem
+     * @param bal
+     * @param selid
+     * @throws SQLException
+     */
+    public void updateData(String id, String rdate, String rtype, String ritem, int bal, String selid)
+            throws SQLException {
+        String sql = "update IncomeAndSpending set id=?, rdate=?, rtype=?, ritem=?, bal=? where id=?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, id);
+        pstmt.setString(2, rdate);
+        pstmt.setString(3, rtype);
+        pstmt.setString(4, ritem);
+        pstmt.setInt(5, bal);
+        pstmt.setString(6, selid);
+        pstmt.executeUpdate();
+    }
+
+    /**
+     * 删除表中数据
+     * @param id
+     * @throws SQLException
+     */
+    public void deleteData(String id) throws SQLException{
+        String sql = "delete from IncomeAndSpending where id=?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, id);
+        pstmt.executeUpdate();
+    }
+
+    /**
+     * 插入数据
+     * @param id
+     * @param rdate
+     * @param rtype
+     * @param ritem
+     * @param bal
+     * @throws SQLException
+     */
+    public void insertData(String id, String rdate, String rtype, String ritem, int bal)
+            throws SQLException {
+        String sql = "insert into IncomeAndSpending values(?, ?, ?, ?, ?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, id);
+        pstmt.setString(2, rdate);
+        pstmt.setString(3, rtype);
+        pstmt.setString(4, ritem);
+        pstmt.setInt(5, bal);
+        pstmt.executeUpdate();
+    }
+
+    public boolean judgeRepeat(String id) throws SQLException{
+        String sql = "select * from IncomeAndSpending where id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, id);
+        rs = pstmt.executeQuery();
+        return rs.next();
     }
 }
