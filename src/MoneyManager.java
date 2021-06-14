@@ -94,6 +94,7 @@ class MainFrame extends JFrame implements ActionListener {
     private final JTable table;
     private final String username;
     private final DefaultTableModel model;
+    SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
     //endregion
 
     public MainFrame(String username) throws SQLException {    //构造方法
@@ -193,7 +194,7 @@ class MainFrame extends JFrame implements ActionListener {
 
     public void actionPerformed(ActionEvent e) {
         Object temp = e.getSource();
-        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+
         try{
             if (temp == mI[0]) {                        //菜单项-密码重置
                 new ModifyPwdFrame(username);           //修改密码界面
@@ -236,7 +237,7 @@ class ModifyPwdFrame extends JFrame implements ActionListener {
     private final JButton b_ok;
     private final JButton b_cancel;
     private final String username;
-    
+
     public ModifyPwdFrame(String username) {
         super("修改密码");
         this.username = username;
@@ -326,7 +327,7 @@ class BalEditFrame extends JFrame implements ActionListener {
     private final DefaultTableModel model;
     private final JTable table;
     private int selRowIndex;
-
+    SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
     public BalEditFrame() {
         super("收支编辑");
         t_id = new JTextField(8);
@@ -445,6 +446,7 @@ class BalEditFrame extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
+
         try {
             if (b_select == e.getSource()) {            //查询所有收支信息
                 model.setRowCount(0);                   //清空表格
@@ -458,6 +460,14 @@ class BalEditFrame extends JFrame implements ActionListener {
                 int bal = Integer.parseInt(t_bal.getText());
                 String selid = (String) table.getValueAt(selRowIndex, 0);
                 new SqlFunction().updateData(id, rdata, rtype, ritem, bal, selid);
+                try{
+                    format.parse(rdata);
+                } catch (ParseException p){
+                    JOptionPane.showMessageDialog(null,                                    //弹出格式错误警告
+                            "日期格式应为：YYYYMMDD", "警告", JOptionPane.ERROR_MESSAGE);
+                    new SqlFunction().deleteData(id);                                                       //删除错误数据
+                }
+
             } else if (b_delete == e.getSource()) {     //删除某条收支信息
                 String selid = (String) table.getValueAt(selRowIndex, 0);
                 new SqlFunction().deleteData(selid);
@@ -473,6 +483,14 @@ class BalEditFrame extends JFrame implements ActionListener {
                 } else {
                     new SqlFunction().insertData(id, rdata, rtype, ritem, bal);
                 }
+                try{
+                    format.parse(rdata);
+                } catch (ParseException p){
+                    JOptionPane.showMessageDialog(null,                                    //弹出格式错误警告
+                            "日期格式应为：YYYYMMDD", "警告", JOptionPane.ERROR_MESSAGE);
+                    new SqlFunction().deleteData(id);                                                       //删除错误数据
+                }
+
 
             } else if (b_clear == e.getSource()) {      //清空输入框
                 t_id.setText("");
