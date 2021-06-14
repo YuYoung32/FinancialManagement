@@ -3,7 +3,6 @@ import java.awt.event.*;
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -73,21 +72,28 @@ class LoginFrame extends JFrame implements ActionListener {                  //±
 //÷˜ΩÁ√Ê
 class MainFrame extends JFrame implements ActionListener {
     //region ±‰¡ø…˘√˜
-    private JMenuBar mb = new JMenuBar();
-    private JMenu m_system = new JMenu("œµÕ≥π‹¿Ì");
-    private JMenu m_fm = new JMenu(" ’÷ßπ‹¿Ì");
-    private JMenuItem mI[] = {new JMenuItem("√‹¬Î÷ÿ÷√"), new JMenuItem("ÕÀ≥ˆœµÕ≥")};
-    private JMenuItem m_FMEdit = new JMenuItem(" ’÷ß±‡º≠");
-    private JLabel l_type, l_fromdate, l_todate, l_bal, l_ps;
-    private JTextField t_fromdate, t_todate;
-    private JButton b_select1, b_select2;
-    private JComboBox c_type;
-    private JPanel p_condition, p_detail;
-    private String s1[] = {" ’»Î", "÷ß≥ˆ"};
-    private int bal1, bal2;
-    private JTable table;
-    private String username;
-    private DefaultTableModel model;
+    private final JMenuBar mb = new JMenuBar();
+    private final JMenu m_system = new JMenu("œµÕ≥π‹¿Ì");
+    private final JMenu m_fm = new JMenu(" ’÷ßπ‹¿Ì");
+    private final JMenuItem[] mI = {new JMenuItem("√‹¬Î÷ÿ÷√"), new JMenuItem("ÕÀ≥ˆœµÕ≥")};
+    private final JMenuItem m_FMEdit = new JMenuItem(" ’÷ß±‡º≠");
+    private final JLabel l_type;
+    private final JLabel l_fromdate;
+    private final JLabel l_todate;
+    private final JLabel l_bal;
+    private final JLabel l_ps;
+    private final JTextField t_fromdate;
+    private final JTextField t_todate;
+    private final JButton b_select1;
+    private final JButton b_select2;
+    private final JComboBox<String> c_type;
+    private final JPanel p_condition;
+    private final JPanel p_detail;
+    private final String[] s1 = {" ’»Î", "÷ß≥ˆ"};
+    private  int bal1;
+    private final JTable table;
+    private final String username;
+    private final DefaultTableModel model;
     //endregion
 
     public MainFrame(String username) throws SQLException {    //ππ‘Ï∑Ω∑®
@@ -108,7 +114,7 @@ class MainFrame extends JFrame implements ActionListener {
 
         //…Ë÷√≤È—Ø√Ê∞Â
         l_type = new JLabel(" ’÷ß¿‡–Õ£∫");
-        c_type = new JComboBox(s1);                    //œ¬¿≠øÚ£∫ ’»Î°¢÷ß≥ˆ
+        c_type = new JComboBox<>(s1);                    //œ¬¿≠øÚ£∫ ’»Î°¢÷ß≥ˆ
         b_select1 = new JButton("≤È—Ø");
         l_fromdate = new JLabel("∆ º ±º‰");
         t_fromdate = new JTextField(8);
@@ -196,17 +202,10 @@ class MainFrame extends JFrame implements ActionListener {
                 System.exit(0);
             } else if (temp == m_FMEdit) {
                 new BalEditFrame();                     // ’÷ß±‡º≠ΩÁ√Ê
-            } else if (temp == b_select1) {            //todo:∏√◊ˆ’‚∏ˆ¡À£¨∏˘æ› ’÷ß¿‡–Õ≤È—Ø
+            } else if (temp == b_select1) {             //∏˘æ›¿‡–Õ≤È—Ø
                 String type = String.valueOf(c_type.getSelectedItem());
-                String startDate = t_fromdate.getText();
-                String endDate = t_todate.getText();
-                try{
-                     format.parse(startDate);
-                }catch (ParseException p){
-                    JOptionPane.showMessageDialog(null,                                    //µØ≥ˆ∏Ò Ω¥ÌŒÛæØ∏Ê
-                            "»’∆⁄∏Ò Ω”¶Œ™£∫YYYYMMDD", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
-                }
-
+                String startDate = "";
+                String endDate = "";
                 model.setRowCount(0);
                 new SqlFunction().selShowData(model, startDate, endDate, type);
             } else if (temp == b_select2) {            //∏˘æ› ±º‰∑∂Œß≤È—Ø
@@ -231,15 +230,13 @@ class MainFrame extends JFrame implements ActionListener {
 
 //–ﬁ∏ƒ√‹¬ÎΩÁ√Ê
 class ModifyPwdFrame extends JFrame implements ActionListener {
-    private JPasswordField t_oldPWD, t_newPWD, t_newPWDAgain;
-    private JButton b_ok, b_cancel;
-    private String username;
-
-    /**
-     * …Ë÷√øÚº‹
-     *
-     * @param username
-     */
+    private final JPasswordField t_oldPWD;
+    private final JPasswordField t_newPWD;
+    private final JPasswordField t_newPWDAgain;
+    private final JButton b_ok;
+    private final JButton b_cancel;
+    private final String username;
+    
     public ModifyPwdFrame(String username) {
         super("–ﬁ∏ƒ√‹¬Î");
         this.username = username;
@@ -312,14 +309,23 @@ class ModifyPwdFrame extends JFrame implements ActionListener {
 
 // ’÷ß±‡º≠ΩÁ√Ê
 class BalEditFrame extends JFrame implements ActionListener {
-    private JTextField t_id, t_date, t_bal;
-    private JComboBox c_type, c_item;
-    private JButton b_update, b_delete, b_select, b_new, b_clear;
-    private JPanel p1, p2, p3;
-    private JScrollPane scrollpane;
-    private DefaultTableModel model;
-    private JTable table;
-    private int selColIndex;
+    private final JTextField t_id;
+    private final JTextField t_date;
+    private final JTextField t_bal;
+    private final JComboBox<String> c_type;
+    private final JComboBox<String> c_item;
+    private final JButton b_update;
+    private final JButton b_delete;
+    private final JButton b_select;
+    private final JButton b_new;
+    private final JButton b_clear;
+    private final JPanel p1;
+    private final JPanel p2;
+    private final JPanel p3;
+    private final JScrollPane scrollpane;
+    private final DefaultTableModel model;
+    private final JTable table;
+    private int selRowIndex;
 
     public BalEditFrame() {
         super(" ’÷ß±‡º≠");
@@ -329,8 +335,8 @@ class BalEditFrame extends JFrame implements ActionListener {
 
         String[] s1 = {" ’»Î", "÷ß≥ˆ"};
         String[] s2 = {"π∫ŒÔ", "≤Õ“˚", "æ”º“", "ΩªÕ®", "”È¿÷", "»À«È", "π§◊ ", "Ω±Ω", "∆‰À˚"};
-        c_type = new JComboBox(s1);                                                                 //œ¬¿≠øÚ
-        c_item = new JComboBox(s2);
+        c_type = new JComboBox<>(s1);                                                                 //œ¬¿≠øÚ
+        c_item = new JComboBox<>(s2);
 
         b_new = new JButton("¬º»Î");
         b_update = new JButton("–ﬁ∏ƒ");
@@ -394,24 +400,21 @@ class BalEditFrame extends JFrame implements ActionListener {
         table.addMouseListener(new MouseListener() {//Œ™tableÃÌº” Û±Íµ„ª˜ ¬º˛º‡Ã˝addMouseListener
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {                                               //fixme:”√ªß÷ªƒ‹µ„ª˜“ª¥Œ«–ªª“ª¥Œ
-                    int selectRows = table.getSelectedRows().length;                        //»°µ√”√ªßÀ˘—°––µƒ–– ˝
-                    if (selectRows == 1) {                                                  //“ª¥Œ÷ªƒ‹—°‘Ò“ª––
                         t_id.setText("");
                         t_date.setText("");
                         t_bal.setText("");
                         c_type.setSelectedIndex(0);
                         c_item.setSelectedIndex(0);
 
-                        selColIndex = table.getSelectedRow();                               //»°µ√”√ªßÀ˘—°––∫≈
-                        t_id.setText((String) table.getValueAt(selectRows, 0));     //∞—À˘—°ƒ⁄»›ÃÓ»Î–≈œ¢øÚ
-                        t_date.setText((String) table.getValueAt(selectRows, 1));
-                        c_type.setSelectedItem(table.getValueAt(selectRows, 2));
-                        c_item.setSelectedItem(table.getValueAt(selectRows, 3));
-                        t_bal.setText(String.valueOf(table.getValueAt(selectRows, 4)));
+                        selRowIndex = table.getSelectedRow();                               //»°µ√”√ªßÀ˘—°––∫≈
+                        t_id.setText((String) table.getValueAt(selRowIndex, 0));     //∞—À˘—°ƒ⁄»›ÃÓ»Î–≈œ¢øÚ
+                        t_date.setText((String) table.getValueAt(selRowIndex, 1));
+                        c_type.setSelectedItem(table.getValueAt(selRowIndex, 2));
+                        c_item.setSelectedItem(table.getValueAt(selRowIndex, 3));
+                        t_bal.setText(String.valueOf(table.getValueAt(selRowIndex, 4)));
                     }
-                }
-            }
+
+
 
             @Override
             public void mousePressed(MouseEvent e) {
@@ -453,10 +456,10 @@ class BalEditFrame extends JFrame implements ActionListener {
                 String rtype = (String) c_type.getSelectedItem();
                 String ritem = (String) c_item.getSelectedItem();
                 int bal = Integer.parseInt(t_bal.getText());
-                String selid = (String) table.getValueAt(selColIndex, 0);
+                String selid = (String) table.getValueAt(selRowIndex, 0);
                 new SqlFunction().updateData(id, rdata, rtype, ritem, bal, selid);
             } else if (b_delete == e.getSource()) {     //…æ≥˝ƒ≥Ãı ’÷ß–≈œ¢
-                String selid = (String) table.getValueAt(selColIndex, 0);
+                String selid = (String) table.getValueAt(selRowIndex, 0);
                 new SqlFunction().deleteData(selid);
             } else if (b_new == e.getSource()) {        //–¬‘ˆƒ≥Ãı ’÷ß–≈œ¢
                 String id = t_id.getText();
