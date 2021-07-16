@@ -8,7 +8,7 @@ import javax.swing.table.DefaultTableModel;
 
 public class MoneyManager {
     public static void main(String[] args) {
-        new SqlFunction();                                                   //≥ı ºªØ ˝æ›ø‚¡¨Ω”
+        new SQLiteFunction();                                                   //≥ı ºªØ ˝æ›ø‚¡¨Ω”
         LoginFrame lf = new LoginFrame();
         lf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
@@ -57,7 +57,7 @@ class LoginFrame extends JFrame implements ActionListener {                  //±
             String loginID = t_user.getText();
             String loginPassword = new String(t_pwd.getPassword());
             try {
-                if (new SqlFunction().login(loginID, loginPassword)) {
+                if (new SQLiteFunction().login(loginID, loginPassword)) {
                     new MainFrame(t_user.getText().trim());    //—È÷§…Ì∑›≥…π¶∫Ûœ‘ æ÷˜ΩÁ√Ê
                     this.setVisible(false);                    //∂¯∫ÛΩÁ√Êœ˚ ß
                 } else                                        //—È÷§ ß∞‹œ‘ ææØ∏Ê
@@ -178,8 +178,8 @@ class MainFrame extends JFrame implements ActionListener {
         add(p_detail, "South");                                                //œÚ∂•º∂»›∆˜ƒ⁄ÃÌº”’‚∏ˆ»›∆˜
         //endregion
         model.setRowCount(0);
-        new SqlFunction().showData(model);
-        bal1 =  new SqlFunction().returnMoney();
+        new SQLiteFunction().showData(model);
+        bal1 =  new SQLiteFunction().returnMoney();
         if (bal1 < 0)
             l_bal.setText("∏ˆ»À◊‹ ’÷ß”‡∂ÓŒ™" + bal1 + "‘™°£ƒ˙“—≥¨÷ß£¨«Î  ∂»œ˚∑—£°");
         else
@@ -208,7 +208,7 @@ class MainFrame extends JFrame implements ActionListener {
                 String startDate = "";
                 String endDate = "";
                 model.setRowCount(0);
-                new SqlFunction().selShowData(model, startDate, endDate, type);
+                new SQLiteFunction().selShowData(model, startDate, endDate, type);
             } else if (temp == b_select2) {            //∏˘æ› ±º‰∑∂Œß≤È—Ø
                 String type = (String) c_type.getSelectedItem();
                 String startDate = t_fromdate.getText();
@@ -220,7 +220,7 @@ class MainFrame extends JFrame implements ActionListener {
                             "»’∆⁄∏Ò Ω”¶Œ™£∫YYYYMMDD", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
                 }
                 model.setRowCount(0);
-                new SqlFunction().selShowData(model, startDate, endDate, type);
+                new SQLiteFunction().selShowData(model, startDate, endDate, type);
             }
         }catch (SQLException s){
             s.printStackTrace();
@@ -285,9 +285,9 @@ class ModifyPwdFrame extends JFrame implements ActionListener {
                             "√‹¬Îπ˝≥§”¶–°”⁄15Œª", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
                 } else {                                                                                   //√‹¬Î ‰»Î∏Ò Ω∫œπÊ£¨‘À––
                     try {
-                        if (new SqlFunction().login(username, t_oldPwd)) {                                 //≈–∂œ‘≠√‹¬Î «∑Ò’˝»∑
+                        if (new SQLiteFunction().login(username, t_oldPwd)) {                                 //≈–∂œ‘≠√‹¬Î «∑Ò’˝»∑
                             if (t_newPwd.equals(t_newPwdAgain)) {                                          //≈–∂œ¡Ω¥Œ√‹¬Î «∑Òœ‡Õ¨
-                                new SqlFunction().changePwd(this.username, t_newPwd);                      //–ﬁ∏ƒ√‹¬Î
+                                new SQLiteFunction().changePwd(this.username, t_newPwd);                      //–ﬁ∏ƒ√‹¬Î
                                 this.dispose();
                             } else {
                                 JOptionPane.showMessageDialog(null,                         //µØ≥ˆ√‹¬Î≤ªÕ¨æØ∏Ê
@@ -446,11 +446,11 @@ class BalEditFrame extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-
+        //todo øº¬«∞—±‰¡ø∂º∑≈‘⁄«∞√Ê£¨ºı–°¥˙¬Î≥§∂»?
         try {
             if (b_select == e.getSource()) {            //≤È—ØÀ˘”– ’÷ß–≈œ¢
                 model.setRowCount(0);                   //«Âø’±Ì∏Ò
-                new SqlFunction().showData(model);
+                new SQLiteFunction().showData(model);
                 table.setModel(model);
             } else if (b_update == e.getSource()) {     //–ﬁ∏ƒƒ≥Ãı ’÷ß–≈œ¢
                 String id = t_id.getText();
@@ -458,37 +458,44 @@ class BalEditFrame extends JFrame implements ActionListener {
                 String rtype = (String) c_type.getSelectedItem();
                 String ritem = (String) c_item.getSelectedItem();
                 int bal = Integer.parseInt(t_bal.getText());
-                String selid = (String) table.getValueAt(selRowIndex, 0);
-                new SqlFunction().updateData(id, rdata, rtype, ritem, bal, selid);
+                String selid = (String) table.getValueAt(selRowIndex, 0);       //—°÷–ƒ≥¡–
+                if(new DataConfirm().isNotEmpty5(id, rdata, rtype, ritem, t_bal.getText()))
+                    new SQLiteFunction().updateData(id, rdata, rtype, ritem, bal, selid);
+                else
+                    JOptionPane.showMessageDialog(null,                                    //µØ≥ˆ∏Ò Ω¥ÌŒÛæØ∏Ê
+                            "∏˜œÓæ˘≤ªƒ‹Œ™ø’", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
                 try{
                     format.parse(rdata);
                 } catch (ParseException p){
                     JOptionPane.showMessageDialog(null,                                    //µØ≥ˆ∏Ò Ω¥ÌŒÛæØ∏Ê
                             "»’∆⁄∏Ò Ω”¶Œ™£∫YYYYMMDD", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
-                    new SqlFunction().deleteData(id);                                                       //…æ≥˝¥ÌŒÛ ˝æ›
+                    new SQLiteFunction().deleteData(id);                                                       //…æ≥˝¥ÌŒÛ ˝æ›
                 }
 
             } else if (b_delete == e.getSource()) {     //…æ≥˝ƒ≥Ãı ’÷ß–≈œ¢
                 String selid = (String) table.getValueAt(selRowIndex, 0);
-                new SqlFunction().deleteData(selid);
+                new SQLiteFunction().deleteData(selid);
             } else if (b_new == e.getSource()) {        //–¬‘ˆƒ≥Ãı ’÷ß–≈œ¢
                 String id = t_id.getText();
                 String rdata = t_date.getText();
                 String rtype = (String) c_type.getSelectedItem();
                 String ritem = (String) c_item.getSelectedItem();
                 int bal = Integer.parseInt(t_bal.getText());
-                if (new SqlFunction().judgeRepeat(id)) {  //ID≤ªƒ‹÷ÿ∏¥£°
+                if (!new DataConfirm().isNotEmpty5(id, rdata, rtype, ritem, t_bal.getText()))
+                    JOptionPane.showMessageDialog(null,                                    //µØ≥ˆ∏Ò Ω¥ÌŒÛæØ∏Ê
+                            "∏˜œÓæ˘≤ªƒ‹Œ™ø’", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
+                if (new SQLiteFunction().judgeRepeat(id)) {  //ID≤ªƒ‹÷ÿ∏¥£°
                     JOptionPane.showMessageDialog(null,
                             "ID“—¥Ê‘⁄£¨«Î–ﬁ∏ƒID", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
                 } else {
-                    new SqlFunction().insertData(id, rdata, rtype, ritem, bal);
+                    new SQLiteFunction().insertData(id, rdata, rtype, ritem, bal);
                 }
                 try{
                     format.parse(rdata);
                 } catch (ParseException p){
                     JOptionPane.showMessageDialog(null,                                    //µØ≥ˆ∏Ò Ω¥ÌŒÛæØ∏Ê
                             "»’∆⁄∏Ò Ω”¶Œ™£∫YYYYMMDD", "æØ∏Ê", JOptionPane.ERROR_MESSAGE);
-                    new SqlFunction().deleteData(id);                                                       //…æ≥˝¥ÌŒÛ ˝æ›
+                    new SQLiteFunction().deleteData(id);                                                       //…æ≥˝¥ÌŒÛ ˝æ›
                 }
 
 
@@ -500,7 +507,7 @@ class BalEditFrame extends JFrame implements ActionListener {
                 c_item.setSelectedIndex(0);
             }
             model.setRowCount(0);                       //√ø¥Œ≤Ÿ◊˜∂º–Ë“™÷ÿ–¬œ‘ æ
-            new SqlFunction().showData(model);
+            new SQLiteFunction().showData(model);
             table.setModel(model);
         } catch (SQLException s) {
             s.printStackTrace();
